@@ -46,11 +46,17 @@ struct StackTable {
     SymbolList& return_top()               { return this->stack_table.back(); }
 
     int find_symbol_table(string token_value); //Returned the index found in the table
+    int find_symbol_filter_type(string token_value, Nature id_nature); 
 
     Symbol get_symbol_occurence(string token_value);
 
+    //Search function with filters
+    Symbol get_symbol_by_type(string token_value, Nature id_nature);
+
     //Working fine for tests
     bool value_declared(string value);
+    //This is the definitive search
+    bool value_declared_nature_filter(string value, Nature id_nature);
 
     //Check declarations for raise ERR_DECLARED/UNDECLARED
     void create_table_entry(string token_value, Symbol ast_symbol);

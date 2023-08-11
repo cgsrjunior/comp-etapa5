@@ -189,7 +189,7 @@ list_cmd    :  cmd ';' list_cmd  {
 
 cmd         : cmd_var         {$$ = $1; /* cout << "<=" << endl; */}
             | cmd_atrib       {$$ = $1;}
-            | cmd_func_call   {$$ = $1;}
+            | cmd_func_call   {$$ = $1;  cout << "cmd:func_call" << endl; }
             | cmd_return      {$$ = $1; /* cout << "return" << endl; */}
             | cmd_flux_ctrl   {$$ = $1;}
             | body            {$$ = $1; /* cout << "body" << endl; */}
@@ -291,15 +291,17 @@ id_label: TK_IDENTIFICADOR {
                   $1->get_tk_value(),
                   $1
             };
-            SymbolList new_entry{
-                  $1->get_tk_value(),
-                  new_data
-            };
             //Need to check if viable create the variable
             if(stack_table.value_declared($1->get_tk_value())){
-                  //cout << "id_label ERR_DECLARED" << endl;
-                  throw_error_message ($1, ERR_DECLARED);
-                  exit(ERR_DECLARED);
+                  //A second look is needed just to check if the name found is a function
+                  Symbol s = stack_table.get_symbol_occurence($1->get_tk_value());
+                  if(s.nature == Nature::FUNC){
+                        stack_table.create_table_entry($1->get_tk_value(), new_data);
+                  }
+                  else{
+                        throw_error_message ($1, ERR_DECLARED);
+                        exit(ERR_DECLARED);
+                  }
             }
             else{
                   stack_table.create_table_entry($1->get_tk_value(), new_data);
@@ -321,9 +323,10 @@ cmd_flux_ctrl   : TK_PR_IF '(' expr ')' body {
 
 cmd_func_call: name_func {
                   //Need to check if function exists
-                  if(stack_table.value_declared($1->get_tk_value())){
+                  if(stack_table.value_declared_nature_filter($1->get_tk_value(), Nature::FUNC)){
                         //Need to pick the first occurence on table
-                        Symbol s = stack_table.get_symbol_occurence($1->get_tk_value());
+                        cout << "Verificar a()" << endl;
+                        Symbol s = stack_table.get_symbol_by_type($1->get_tk_value(), Nature::FUNC);
                         int check_symbol = check_bad_attrib(s.nature, Nature::FUNC);
                         if(check_symbol > 0){
                               throw_error_message($1, check_symbol);
@@ -426,27 +429,34 @@ expr_5: unary_expr                     {$$ = $1;}
 
 unary_expr: parenthesis_prec               {$$ = $1;}
           | unary_operand parenthesis_prec {
+            cout << "check parenthesis" << endl;
             $$ = $1; 
             $$->add_child($2);
             $$->set_type_node($2->get_type_node());
-      }
-      ;
+          }
+          ;
+
 
 parenthesis_prec    :  operand      {$$ = $1;}
                     | '(' expr ')'  {$$ = $2;}
                     ;
 
-operand     : id_var        {$$ = $1;}
+operand     : id_var        {$$ = $1; }
             | lit             {$$ = $1;}
-            | func_call_param {$$ = $1;}
+            | func_call_param {
+                  $$ = $1;
+                  //If a variable was called as a function, we need to throw an error right there
+                  cout << "parameter read" << endl;
+            }
             ;
 
+//Here we need to check if our label was reffering to a func too
 id_var:     TK_IDENTIFICADOR {
                   if(!(stack_table.value_declared($1->get_tk_value()))){
                               //cout << "Entrei no id_var_decl" << endl;
                               throw_error_message ($1, ERR_UNDECLARED);
                               exit(ERR_UNDECLARED);
-                        }
+                  }
             }
             ;
 
@@ -459,7 +469,7 @@ cmd_atrib   : id_var_decl '=' expr {
                   //First we need to check if the variable was created before we make the atribution command
                   try{
                         if(!(stack_table.value_declared($1->get_tk_value()))){
-                              //cout << "Entrei no id_var_decl" << endl;
+                              cout << "Entrei no id_var_decl" << endl;
                               throw_error_message ($1, ERR_UNDECLARED);
                               exit(ERR_UNDECLARED);
                         }

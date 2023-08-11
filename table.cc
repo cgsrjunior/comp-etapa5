@@ -18,8 +18,33 @@ int StackTable::find_symbol_table(string token_value) {
     return i;
 }
 
+//This code will find the column that the element was given if
+//token value and id_nature matches the searching
+//If a element cannot be found, return -1
+int StackTable::find_symbol_filter_type(string token_value, Nature id_nature) {
+    int i = 0;
+    for (i = this->stack_table.size()-1; i>=0; i--) {
+        if ((this->stack_table[i].label.compare(token_value) == 0) && this->stack_table[i].data.nature == id_nature){
+            break;
+        }
+    }
+    return i;
+}
+
+
 Symbol StackTable::get_symbol_occurence(string token_value){
     int i = this->find_symbol_table(token_value);
+    if (i <= 0){
+        exit(ERR_UNDECLARED);
+    }
+    else{
+        //This will return a symbol structure
+        return this->stack_table[i].data;
+    }
+}
+
+Symbol StackTable::get_symbol_by_type(string token_value, Nature id_nature){
+    int i = this->find_symbol_filter_type(token_value, id_nature);
     if (i <= 0){
         exit(ERR_UNDECLARED);
     }
@@ -33,6 +58,12 @@ Symbol StackTable::get_symbol_occurence(string token_value){
 // variable error
 bool StackTable::value_declared(string value){
     return find_symbol_table(value) >= 0;
+}
+
+//This function should be used to check if we launch a declared or undeclared
+// variable error
+bool StackTable::value_declared_nature_filter(string value, Nature id_nature){
+    return find_symbol_filter_type(value, id_nature) >= 0;
 }
 
 void StackTable::create_table_entry(string token_value, Symbol ast_symbol){
