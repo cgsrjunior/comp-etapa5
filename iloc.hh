@@ -6,6 +6,9 @@
 
 using namespace std;
 
+using label_type = int;
+using reg_type = int;
+
 //Tipos de instrução em ILOC
 enum Instruct {
     NOP,
@@ -58,29 +61,71 @@ enum Instruct {
     CMP_NE
 };
 
-//Using this to store the temp_values
-//Need to check when we need to search on this list
-struct List_Temp{
-    string label_temp;
-    int value;
-};
 
 struct Cod_ILOC{
-    //Codigo de 3 endereços
-    Instruct instruction;
-    //Need to define a type to declare the ends
-    string end1;
-    string end2;
-    string end3;
+    //Listing all registers
+    const reg_type NO_REG = 0;
+    const reg_type RBSS = 1;
+    const reg_type RFP = 2;
+    const reg_type RSP = 3;
+    const reg_type RPC = 4;
+    reg_type counter = 5;
+
+    const reg_type ADDR_DESLOC = -4;
+    const reg_type VALUE_DESLOC = -8;
+
+    inline reg_type get_new_register() { return counter++; }
+
+
+    const label_type NO_LABEL = 0;
+    label_type label_id = 1;
+
+    inline label_type get_new_label() { return label_id++; }    
+    
 };
 
-struct List_ILOC{
-    //Lista de instruções ILOC
-    vector<Cod_ILOC> list_inst;
-    //TODO operation on the list
+struct Command{
+    // INST [r1|c] [r2|c] => <rd|L> [L]
+    // inst  op1    op2       op3   op4
+    label_type label;
+    Instruct inst;
+    reg_type op1;
+    reg_type op2;
+    reg_type op3;
+    reg_type op4;
 
-    //Setting instructions
-    inline Cod_ILOC get_iloc_inst(int i){return this->list_inst[i];}
-    inline void set_iloc_inst(int i, Cod_ILOC inst){this->list_inst[i]= inst;}
+    //Initialize operators
+    Command(label_type label, Instruct inst);
+    //Initialize unitilized operator on 0 
+    Command(Instruct inst, reg_type op1, reg_type op2, reg_type op3, reg_type op4);
+    //Idea: form a string on the following format indicate above on first line
+    string formatstring();
 };
 
+struct ILOC_struct{
+    reg_type temp;
+    label_type flag_true;
+    label_type flag_false;
+};
+
+/*
+     ______________________
+    |      valor_ret       |
+    |       addr_ret       |
+    |======================| -> Base da pilha (RFP)
+    |        param0        |
+    |        param1        |
+    |          ...         |
+    |        paramN        |
+    |- - - - - - - - - - - |
+    |         var0         |
+    |         var1         |
+    |          ...         |
+    |         varN         |
+    |- - - - - - - - - - - |
+    |    vinc_estatico     |
+    |    vinc_dinamico     |
+    |     
+
+
+*/
