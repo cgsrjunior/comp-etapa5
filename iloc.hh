@@ -102,10 +102,19 @@ struct Command{
     string formatstring();
 };
 
+//Auxiliar functions
+bool register_inserted(reg_type key, vector<reg_type> list);
+
+string get_register_name(reg_type reg);
+
 struct ILOC_struct{
     reg_type temp;
     label_type flag_true;
     label_type flag_false;
+    //List with all code attached
+    vector<Command> code_lines;
+    //Function to put the command on the code
+    void code_attachment(vector<Command> from);
 };
 
 /*
